@@ -28,9 +28,17 @@ jobs:
       
       - name: Build extension
         run: |
+          mkdir output
           google-chrome-stable --pack-extension=panopto_keyboard_controller
           zip -r panopto_keyboard_controller.zip panopto_keyboard_controller/
+          mv panopto_keyboard_controller* output/
       
+      - name: Upload crx artifact
+        uses: actions/upload-artifact@v3
+        with:
+            name: build-artifacts
+            path: output/
+            retention-days: 7
 
       - name: Rename extension with version
         if: startsWith(github.ref, 'refs/tags/')
