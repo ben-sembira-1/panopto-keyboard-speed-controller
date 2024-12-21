@@ -9,13 +9,16 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       VERSION: ""
+      SHORT_COMMIT: ""
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Extract version from CI variables
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      - name: Extract commit metadata
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          echo "SHORT_COMMIT=$(echo ${GITHUB_SHA} | cut -c1-6)" >> $GITHUB_ENV
       
       - name: Set up google-chrome
         run: sudo apt-get -y install google-chrome-stable
@@ -31,12 +34,13 @@ jobs:
           mkdir output
           google-chrome-stable --pack-extension=panopto_keyboard_controller
           zip -r panopto_keyboard_controller.zip panopto_keyboard_controller/
-          mv panopto_keyboard_controller.{crx,zip} output/
+          cp panopto_keyboard_controller.crx output/panopto_keyboard_controller-${{ env.SHORT_COMMIT }}.crx
+          cp panopto_keyboard_controller.zip output/panopto_keyboard_controller-${{ env.SHORT_COMMIT }}.zip
       
       - name: Upload crx artifact
         uses: actions/upload-artifact@v4
         with:
-            name: build-artifacts
+            name: build-artifacts-${{ env.SHORT_COMMIT }}
             path: output/
             retention-days: 7
 
