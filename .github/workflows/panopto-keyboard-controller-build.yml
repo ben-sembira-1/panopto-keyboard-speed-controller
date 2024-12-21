@@ -1,0 +1,45 @@
+name: Build Panopto Keyboard Controller chrome extension
+on: push
+
+permissions:
+  contents: write
+
+jobs:
+  build-extension:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ""
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Extract version from CI variables
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      
+      - name: Set up google-chrome
+        run: sudo apt-get -y install google-chrome-stable
+      
+      - name: Bump version in manifest.json
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          jq --arg version "${{ env.VERSION }}" '.version=$version' panopto_keyboard_controller/manifest.json > panopto_keyboard_controller/manifest_with_version.json.tmp
+          mv panopto_keyboard_controller/manifest_with_version.json.tmp panopto_keyboard_controller/manifest.json
+      
+      - name: Build crx extension file
+        run: google-chrome-stable --pack-extension=panopto_keyboard_controller
+      
+
+      - name: Rename extension with version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: mv panopto_keyboard_controller.crx panopto_keyboard_controller-v${{ env.VERSION }}.crx
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          tag_name: ${{ env.VERSION }}
+          files: panopto_keyboard_controller-v${{ env.VERSION }}.crx
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
