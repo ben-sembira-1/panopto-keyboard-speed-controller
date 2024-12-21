@@ -11,11 +11,14 @@ jobs:
   build-extension:
     runs-on: ubuntu-latest
     env:
-      VERSION: ${GITHUB_REF#refs/tags/}
+      VERSION: ""
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+
+      - name: Extract version from CI variables
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
       
       - name: Set up google-chrome
         run: sudo apt-get -y install google-chrome-stable
