@@ -6,16 +6,19 @@ permissions:
 
 jobs:
   build-extension:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       VERSION: ""
+      SHORT_COMMIT: ""
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Extract version from CI variables
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      - name: Extract commit metadata
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          echo "SHORT_COMMIT=$(echo ${GITHUB_SHA} | cut -c1-6)" >> $GITHUB_ENV
       
       - name: Set up google-chrome
         run: sudo apt-get -y install google-chrome-stable
@@ -26,13 +29,26 @@ jobs:
           jq --arg version "${{ env.VERSION }}" '.version=$version' panopto_keyboard_controller/manifest.json > panopto_keyboard_controller/manifest_with_version.json.tmp
           mv panopto_keyboard_controller/manifest_with_version.json.tmp panopto_keyboard_controller/manifest.json
       
-      - name: Build crx extension file
-        run: google-chrome-stable --pack-extension=panopto_keyboard_controller
+      - name: Build extension
+        run: |
+          mkdir output
+          google-chrome-stable --pack-extension=panopto_keyboard_controller
+          zip -r panopto_keyboard_controller.zip panopto_keyboard_controller/
+          cp panopto_keyboard_controller.crx output/panopto_keyboard_controller-${{ env.SHORT_COMMIT }}.crx
+          cp panopto_keyboard_controller.zip output/panopto_keyboard_controller-${{ env.SHORT_COMMIT }}.zip
       
+      - name: Upload crx artifact
+        uses: actions/upload-artifact@v4
+        with:
+            name: build-artifacts-${{ env.SHORT_COMMIT }}
+            path: output/
+            retention-days: 7
 
       - name: Rename extension with version
         if: startsWith(github.ref, 'refs/tags/')
-        run: mv panopto_keyboard_controller.crx panopto_keyboard_controller-v${{ env.VERSION }}.crx
+        run: |
+          mv panopto_keyboard_controller.crx panopto_keyboard_controller-v${{ env.VERSION }}.crx
+          mv panopto_keyboard_controller.zip panopto_keyboard_controller-v${{ env.VERSION }}.zip
 
       - name: Create Release
         id: create_release
@@ -40,6 +56,8 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           tag_name: ${{ env.VERSION }}
-          files: panopto_keyboard_controller-v${{ env.VERSION }}.crx
+          files: |
+            panopto_keyboard_controller-v${{ env.VERSION }}.crx
+            panopto_keyboard_controller-v${{ env.VERSION }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
