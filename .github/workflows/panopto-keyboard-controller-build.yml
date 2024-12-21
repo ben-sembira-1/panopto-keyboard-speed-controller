@@ -26,13 +26,17 @@ jobs:
           jq --arg version "${{ env.VERSION }}" '.version=$version' panopto_keyboard_controller/manifest.json > panopto_keyboard_controller/manifest_with_version.json.tmp
           mv panopto_keyboard_controller/manifest_with_version.json.tmp panopto_keyboard_controller/manifest.json
       
-      - name: Build crx extension file
-        run: google-chrome-stable --pack-extension=panopto_keyboard_controller
+      - name: Build extension
+        run: |
+          google-chrome-stable --pack-extension=panopto_keyboard_controller
+          zip -r panopto_keyboard_controller.zip panopto_keyboard_controller/
       
 
       - name: Rename extension with version
         if: startsWith(github.ref, 'refs/tags/')
-        run: mv panopto_keyboard_controller.crx panopto_keyboard_controller-v${{ env.VERSION }}.crx
+        run: |
+          mv panopto_keyboard_controller.crx panopto_keyboard_controller-v${{ env.VERSION }}.crx
+          mv panopto_keyboard_controller.zip panopto_keyboard_controller-v${{ env.VERSION }}.zip
 
       - name: Create Release
         id: create_release
@@ -40,6 +44,8 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           tag_name: ${{ env.VERSION }}
-          files: panopto_keyboard_controller-v${{ env.VERSION }}.crx
+          files: |
+            panopto_keyboard_controller-v${{ env.VERSION }}.crx
+            panopto_keyboard_controller-v${{ env.VERSION }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
