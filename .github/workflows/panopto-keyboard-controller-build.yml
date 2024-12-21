@@ -31,7 +31,7 @@ jobs:
           mkdir output
           google-chrome-stable --pack-extension=panopto_keyboard_controller
           zip -r panopto_keyboard_controller.zip panopto_keyboard_controller/
-          mv panopto_keyboard_controller* output/
+          mv panopto_keyboard_controller.{crx,zip} output/
       
       - name: Upload crx artifact
         uses: actions/upload-artifact@v4
