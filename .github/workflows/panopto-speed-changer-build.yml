@@ -1,0 +1,40 @@
+name: Build Panopto Speed Changer chrome extension
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-extension:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${GITHUB_REF#refs/tags/}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Set up google-chrome
+        run: sudo apt-get -y install google-chrome-stable
+      
+      - name: Bump version in manifest.json
+        run: |
+          jq --arg version "${{ env.VERSION }}" '.version=$version' panopto_speed_changer/manifest.json > panopto_speed_changer/manifest_with_version.json.tmp
+          mv panopto_speed_changer/manifest_with_version.json.tmp panopto_speed_changer/manifest.json
+      
+      - name: Build crx extension file
+        run: |
+          google-chrome-stable --pack-extension=panopto_speed_changer
+          mv panopto_speed_changer.crx panopto_speed_changer-v${{ env.VERSION }}.crx
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          files: panopto_speed_changer-v${{ env.VERSION }}.crx
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
