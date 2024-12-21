@@ -6,7 +6,7 @@ permissions:
 
 jobs:
   build-extension:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       VERSION: ""
 
@@ -34,7 +34,7 @@ jobs:
           mv panopto_keyboard_controller* output/
       
       - name: Upload crx artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
             name: build-artifacts
             path: output/
