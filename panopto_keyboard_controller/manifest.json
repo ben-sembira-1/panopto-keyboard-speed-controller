@@ -3,9 +3,7 @@
 	"name": "Panopto Keyboard Speed Controller",
 	"version": "0.0",
 	"description": "Adjust video playback speed with '+' and '-' keys.",
-	"permissions": [
-		"activeTab"
-	],
+	"permissions": [],
 	"content_scripts": [
 		{
 			"matches": [
