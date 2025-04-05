@@ -36,6 +36,7 @@ jobs:
           zip -r panopto_keyboard_controller.zip panopto_keyboard_controller/
           cp panopto_keyboard_controller.crx output/panopto_keyboard_controller-${{ env.SHORT_COMMIT }}.crx
           cp panopto_keyboard_controller.zip output/panopto_keyboard_controller-${{ env.SHORT_COMMIT }}.zip
+          cp -r panopto_keyboard_controller/icons output/icons
       
       - name: Upload crx artifact
         uses: actions/upload-artifact@v4
@@ -49,6 +50,7 @@ jobs:
         run: |
           mv panopto_keyboard_controller.crx panopto_keyboard_controller-v${{ env.VERSION }}.crx
           mv panopto_keyboard_controller.zip panopto_keyboard_controller-v${{ env.VERSION }}.zip
+          mv output/icons output/icons-v${{ env.VERSION }}/
 
       - name: Create Release
         id: create_release
@@ -57,7 +59,8 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}
           files: |
-            panopto_keyboard_controller-v${{ env.VERSION }}.crx
-            panopto_keyboard_controller-v${{ env.VERSION }}.zip
+            output/panopto_keyboard_controller-v${{ env.VERSION }}.crx
+            output/panopto_keyboard_controller-v${{ env.VERSION }}.zip
+            output/icons-v${{ env.VERSION }}/
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
